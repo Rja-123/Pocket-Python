@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pocket Python</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E9EEF5; --sheet:#FFFFFF; --ink:#13203A; --muted:#5B6782;
+  --blue:#2F5FA7; --yellow:#FFD43B; --yellow-ink:#2A2100; --line:#CFD7E4;
+  --err:#B83A24; --ok:#1E7A4C; --gutter:#F2F5FA;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1830; --sheet:#16233F; --ink:#E6ECF7; --muted:#9AA8C4;
+    --blue:#7FA8E8; --line:#2A3A5C; --err:#FF8A73; --ok:#6FD3A0; --gutter:#121E37;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1830; --sheet:#16233F; --ink:#E6ECF7; --muted:#9AA8C4;
+  --blue:#7FA8E8; --line:#2A3A5C; --err:#FF8A73; --ok:#6FD3A0; --gutter:#121E37;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--display);-webkit-text-size-adjust:100%}
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 110px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+h1{font-weight:800;font-size:clamp(2rem,8vw,3rem);line-height:.95;letter-spacing:-.03em;margin:0}
+h1 .prompt{font-family:var(--mono);font-weight:600;font-size:.42em;color:var(--blue);display:block;letter-spacing:0;margin-bottom:6px}
+.sub{color:var(--muted);font-size:.95rem;margin:6px 0 0}
+select{font:500 .95rem var(--display);color:var(--ink);background:var(--sheet);border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;max-width:100%}
+.panel{background:var(--sheet);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px 8px 14px;border-bottom:1.5px solid var(--line);font-size:.9rem;color:var(--muted)}
+.bar strong{color:var(--ink);font-weight:500}
+.ghost{font:500 .85rem var(--display);background:none;border:0;color:var(--blue);padding:6px 8px;border-radius:8px;cursor:pointer}
+.ghost:hover{background:var(--gutter)}
+.editor{display:flex;height:min(52vh,420px);overflow:hidden}
+.gutter{background:var(--gutter);color:var(--muted);font:400 14px/1.6 var(--mono);text-align:right;padding:12px 8px 12px 10px;user-select:none;overflow:hidden;min-width:2.6em;white-space:pre}
+textarea{flex:1;border:0;outline:none;resize:none;background:transparent;color:var(--ink);font:400 14px/1.6 var(--mono);padding:12px;white-space:pre;overflow:auto;tab-size:4}
+.out-panel{margin-top:14px}
+.console{font:400 14px/1.6 var(--mono);padding:12px 14px;min-height:120px;max-height:45vh;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.console .err{color:var(--err)}
+.console .sys{color:var(--muted)}
+.console .done{color:var(--ok)}
+.empty{color:var(--muted);font-family:var(--display)}
+.ask{display:flex;gap:8px;padding:0 14px 14px}
+.ask input{flex:1;min-width:0;font:400 15px var(--mono);color:var(--ink);background:var(--gutter);border:1.5px solid var(--blue);border-radius:10px;padding:10px}
+.ask button{font:600 .9rem var(--display);border:0;border-radius:10px;background:var(--blue);color:#fff;padding:0 16px;cursor:pointer}
+#turtle{display:none;padding:12px;border-top:1.5px solid var(--line);overflow-x:auto;background:#fff}
+#turtle.on{display:block}
+#turtle canvas{max-width:100%}
+.dock{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--paper) 70%,transparent)}
+.dock-in{max-width:760px;margin:0 auto;display:flex;gap:10px}
+.run{flex:1;font:800 1.15rem var(--display);letter-spacing:-.01em;background:var(--yellow);color:var(--yellow-ink);border:0;border-radius:14px;padding:15px;cursor:pointer;box-shadow:0 3px 0 #C9A21A}
+.run:active{transform:translateY(2px);box-shadow:0 1px 0 #C9A21A}
+.run.stop{background:var(--err);color:#fff;box-shadow:0 3px 0 #7a2416}
+.side{font:500 .95rem var(--display);background:var(--sheet);color:var(--ink);border:1.5px solid var(--line);border-radius:14px;padding:0 16px;cursor:pointer}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:10px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.loading{color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1><span class="prompt">&gt;&gt;&gt; run it</span>Pocket Python</h1>
+      <p class="sub">Write a little Python, tap Run, see what happens.</p>
+    </div>
+    <select id="examples" aria-label="Load an example">
+      <option value="">Load an example…</option>
+      <option value="hello">Say hello</option>
+      <option value="guess">Guess the number</option>
+      <option value="table">Times table</option>
+      <option value="fizz">FizzBuzz</option>
+      <option value="star">Turtle star drawing</option>
+    </select>
+  </header>
+
+  <section class="panel">
+    <div class="bar"><strong>main.py</strong>
+      <span>
+        <button class="ghost" id="copyBtn" type="button">Copy code</button>
+        <button class="ghost" id="resetBtn" type="button">Clear code</button>
+      </span>
+    </div>
+    <div class="editor">
+      <div class="gutter" id="gutter" aria-hidden="true">1</div>
+      <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="Python code"></textarea>
+    </div>
+  </section>
+
+  <section class="panel out-panel">
+    <div class="bar"><strong>Output</strong><button class="ghost" id="clearOut" type="button">Clear output</button></div>
+    <div class="console" id="console" aria-live="polite"><span class="empty">Your program's output shows up here.</span></div>
+    <form class="ask" id="ask" hidden>
+      <input id="askInput" autocomplete="off" autocapitalize="off" aria-label="Type your answer">
+      <button type="submit">Enter</button>
+    </form>
+    <div id="turtle"></div>
+  </section>
+</div>
+
+<div class="dock"><div class="dock-in">
+  <button class="run" id="runBtn" type="button">Run ▶</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+<script>
+const EX = {
+hello:`name = input("What's your name? ")
+print(f"Hello, {name}! 👋")
+print("Your name has", len(name), "letters.")`,
+guess:`import random
+
+secret = random.randint(1, 20)
+tries = 0
+print("I'm thinking of a number from 1 to 20.")
+
+while True:
+    guess = int(input("Your guess: "))
+    tries += 1
+    if guess < secret:
+        print("Too low ⬇️")
+    elif guess > secret:
+        print("Too high ⬆️")
+    else:
+        print(f"Got it in {tries} tries! 🎉")
+        break`,
+table:`n = int(input("Which times table? "))
+for i in range(1, 11):
+    print(f"{n} x {i} = {n * i}")`,
+fizz:`for i in range(1, 31):
+    if i % 15 == 0:
+        print("FizzBuzz")
+    elif i % 3 == 0:
+        print("Fizz")
+    elif i % 5 == 0:
+        print("Buzz")
+    else:
+        print(i)`,
+star:`import turtle
+
+t = turtle.Turtle()
+t.speed(0)
+t.color("purple")
+for i in range(36):
+    t.forward(120)
+    t.right(170)
+print("Drawing done!")`
+};
+
+const $ = id => document.getElementById(id);
+const code = $('code'), gutter = $('gutter'), out = $('console');
+const runBtn = $('runBtn'), ask = $('ask'), askInput = $('askInput');
+const DRAFT = 'pocket-python-draft';
+
+function store(k, v){ try{ v===undefined ? null : localStorage.setItem(k, v); return localStorage.getItem(k); }catch(e){ return null; } }
+code.value = store(DRAFT) || EX.hello;
+
+function updateGutter(){
+  const n = code.value.split('\n').length;
+  let s = ''; for (let i = 1; i <= n; i++) s += i + '\n';
+  gutter.textContent = s;
+}
+code.addEventListener('input', () => { updateGutter(); store(DRAFT, code.value); });
+code.addEventListener('scroll', () => { gutter.scrollTop = code.scrollTop; });
+code.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const s = code.selectionStart, en = code.selectionEnd;
+    code.setRangeText('    ', s, en, 'end');
+    code.dispatchEvent(new Event('input'));
+  } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault(); runBtn.click();
+  } else if (e.key === 'Enter') {
+    // keep indentation, add more after a colon
+    const s = code.selectionStart;
+    const lineStart = code.value.lastIndexOf('\n', s - 1) + 1;
+    const line = code.value.slice(lineStart, s);
+    let indent = line.match(/^\s*/)[0];
+    if (/:\s*$/.test(line)) indent += '    ';
+    e.preventDefault();
+    code.setRangeText('\n' + indent, s, code.selectionEnd, 'end');
+    code.dispatchEvent(new Event('input'));
+  }
+});
+updateGutter();
+
+$('examples').addEventListener('change', e => {
+  if (!e.target.value) return;
+  code.value = EX[e.target.value];
+  code.dispatchEvent(new Event('input'));
+  e.target.value = '';
+  clearOutput();
+});
+$('resetBtn').addEventListener('click', () => { code.value = ''; code.dispatchEvent(new Event('input')); code.focus(); });
+$('clearOut').addEventListener('click', clearOutput);
+$('copyBtn').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(code.value); toast('Code copied'); }
+  catch (e) { code.focus(); code.select(); toast('Code selected — copy it from the menu'); }
+});
+
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 1800); }
+function clearOutput(){ out.innerHTML = '<span class="empty">Your program\'s output shows up here.</span>'; const tu = $('turtle'); tu.innerHTML=''; tu.classList.remove('on'); }
+function write(text, cls){
+  const em = out.querySelector('.empty'); if (em) em.remove();
+  const span = document.createElement('span');
+  if (cls) span.className = cls;
+  span.textContent = text;
+  out.appendChild(span);
+  out.scrollTop = out.scrollHeight;
+}
+
+let running = false, stopAsked = false, pendingInput = null;
+
+function inputFn(prompt){
+  return new Promise(resolve => {
+    if (prompt) write(String(prompt));
+    ask.hidden = false; askInput.value = ''; askInput.focus();
+    pendingInput = v => { ask.hidden = true; write(v + '\n', 'sys'); pendingInput = null; resolve(v); };
+  });
+}
+ask.addEventListener('submit', e => { e.preventDefault(); if (pendingInput) pendingInput(askInput.value); });
+
+function readFile(f){
+  if (Sk.builtinFiles === undefined || Sk.builtinFiles.files[f] === undefined) throw "File not found: '" + f + "'";
+  return Sk.builtinFiles.files[f];
+}
+
+function friendly(err){
+  let msg = err.toString();
+  if (err.traceback && err.traceback.length) {
+    const ln = err.traceback[0].lineno;
+    if (!/line \d+/.test(msg)) msg += ' (line ' + ln + ')';
+  }
+  return msg;
+}
+
+runBtn.addEventListener('click', () => {
+  if (running) { stopAsked = true; if (pendingInput) { ask.hidden = true; pendingInput = null; finish('Stopped.', 'sys'); } return; }
+  if (typeof Sk === 'undefined') { write('Python is still loading. Check your connection and try again.\n', 'err'); return; }
+  clearOutput();
+  running = true; stopAsked = false;
+  runBtn.textContent = 'Stop ■'; runBtn.classList.add('stop');
+  const usesTurtle = /\bturtle\b/.test(code.value);
+  const tu = $('turtle');
+  if (usesTurtle) tu.classList.add('on');
+  (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = 'turtle';
+  Sk.TurtleGraphics.width = Math.min(400, tu.clientWidth ? tu.clientWidth - 24 : 340);
+  Sk.TurtleGraphics.height = 360;
+  Sk.configure({
+    output: t => write(t),
+    read: readFile,
+    inputfun: inputFn,
+    inputfunTakesPrompt: true,
+    __future__: Sk.python3,
+    execLimit: 20000,
+    yieldLimit: 100
+  });
+  const t0 = performance.now();
+  Sk.misceval.asyncToPromise(
+    () => Sk.importMainWithBody('<stdin>', false, code.value, true),
+    { '*': () => { if (stopAsked) throw new Error('Stopped by you.'); } }
+  ).then(
+    () => finish('✓ Finished in ' + ((performance.now() - t0) / 1000).toFixed(2) + 's', 'done'),
+    err => {
+      if (!running) return;
+      let msg = err instanceof Error ? err.message : friendly(err);
+      if (/TimeLimitError/.test(msg)) msg = 'Your program ran longer than 20 seconds, so it was stopped. Check for a loop that never ends.';
+      finish(msg, stopAsked ? 'sys' : 'err');
+    }
+  );
+});
+
+function finish(msg, cls){
+  running = false;
+  runBtn.textContent = 'Run ▶'; runBtn.classList.remove('stop');
+  ask.hidden = true; pendingInput = null;
+  write((out.textContent.endsWith('\n') || !out.querySelector('span:not(.empty)') ? '' : '\n') + msg + '\n', cls);
+}
+</script>
+</body>
+</html>
